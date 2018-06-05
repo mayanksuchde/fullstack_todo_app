@@ -35,7 +35,7 @@ class TodoList extends Component{
 	async toggleTodo(todo){
 		let updatedTodo=await apiCalls.updateTodo(todo);
 		const todos = this.state.todos.map(t =>
-	    (t._id === updatedTodo._id)
+	    (t._id === todo._id)
 	    ? {...t, completed: !t.completed}
 	    : t
 	    )

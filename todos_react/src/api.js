@@ -73,7 +73,7 @@ export async function updateTodo(todo){
 			headers:new Headers({
 				'Content-Type':'application/json',
 			}),
-			body:JSON.stringify({completed:!todo.completed})
+			body:JSON.stringify({completed: !todo.completed})
 		})
 	.then(resp=>{
 		if(!resp.ok){
