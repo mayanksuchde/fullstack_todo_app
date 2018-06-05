@@ -1,7 +1,8 @@
 import React,{Component} from 'react';
 import TodoItem from './TodoItem';
 import TodoForm from './TodoForm';
-const api='/api/todos/';
+import * as apiCalls from './api'
+
 
 class TodoList extends Component{
 	constructor(props){
@@ -15,75 +16,30 @@ class TodoList extends Component{
 	componentWillMount(){
 	this.loadTodos();
 	}
-	loadTodos(){
-	fetch(api)
-	.then(resp=>{
-		if(!resp.ok){
-			if(resp.status>=400 && resp.status<500){
-				return resp.json().then(data=>{
-					let err={errorMessage:data.message};
-					throw err;
-				})
-			}else{
-				let err={errorMessage:'Please try again later'}
-				throw err;
-			}
-		}
-		return resp.json();
-})
-	.then(todos=>this.setState({todos}));	
-}
-	addTodo(val){
-		fetch(api,{
-			method:'post',
-			headers:new Headers({
-				'Content-Type':'application/json',
-			}),
-			body:JSON.stringify({name:val})
-		})
-	.then(resp=>{
-		if(!resp.ok){
-			if(resp.status>=400 && resp.status<500){
-				return resp.json().then(data=>{
-					let err={errorMessage:data.message};
-					throw err;
-				})
-			}else{
-				let err={errorMessage:'Please try again later'}
-				throw err;
-			}
-		}
-		return resp.json();
-})
-	.then(newTodo=>{
-		this.setState({todos:[...this.state.todos,newTodo]})
-	});
-
+	async loadTodos(){
+		let todos=await apiCalls.getTodos();
+		this.setState({todos});	
 	}
-	deleteTodo(id){
-		const deleteURL=api+id;
-		fetch(deleteURL,{
-			method:'delete',
-			
-		})
-	.then(resp=>{
-		if(!resp.ok){
-			if(resp.status>=400 && resp.status<500){
-				return resp.json().then(data=>{
-					let err={errorMessage:data.message};
-					throw err;
-				})
-			}else{
-				let err={errorMessage:'Please try again later'}
-				throw err;
-			}
-		}
-		return ;
-})
-	.then(()=>{
+	async addTodo(val){
+		let newTodo=await apiCalls.createTodo(val);	
+		this.setState({todos:[...this.state.todos,newTodo]})
+	}
+
+	
+	async deleteTodo(id){
+		await apiCalls.removeTodo(id);
 		const todos=this.state.todos.filter(todo=>todo._id!==id);
 		this.setState({todos:todos});
-	})
+	}
+
+	async toggleTodo(todo){
+		let updatedTodo=await apiCalls.updateTodo(todo);
+		const todos = this.state.todos.map(t =>
+	    (t._id === updatedTodo._id)
+	    ? {...t, completed: !t.completed}
+	    : t
+	    )
+	   this.setState({todos: todos});
 	}
 	render(){
 		const todos=this.state.todos.map((t)=>(
@@ -91,6 +47,7 @@ class TodoList extends Component{
 				key={t._id}
 				{...t}
 				onDelete={this.deleteTodo.bind(this,t._id)}
+				onToggle={this.toggleTodo.bind(this,t)}
 			/>
 			));
 		return (
